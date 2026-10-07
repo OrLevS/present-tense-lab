@@ -1,0 +1,51 @@
+// Tests for Progressive / negatives / questions / WH checking (run by npm test).
+import { evaluateSentence } from '../public/js/logic/evaluate.js';
+
+let fail = 0;
+const T = (name, answer, accepted, structure, expect) => {
+  const r = evaluateSentence(answer, { acceptedAnswers: accepted, target: { structure } });
+  const bad = Object.entries(expect).filter(([k, v]) => (k === 'hasTag' ? !r.errorTags.includes(v) : k === 'noTag' ? r.errorTags.includes(v) : r[k] !== v));
+  if (bad.length) { fail++; console.log('✗', name, '| expected', expect, '| got', { correct: r.correct, grammarCorrect: r.grammarCorrect, spellingCorrect: r.spellingCorrect, tags: r.errorTags }); }
+  else console.log('✓', name);
+};
+const pp = ['She is using her phone now.'];
+T('pp correct', 'She is using her phone now.', pp, 'pp', { correct: true });
+T('pp contraction', "She's using her phone now", pp, 'pp', { correct: true });
+T('pp missing be', 'She using her phone now.', pp, 'pp', { grammarCorrect: false, hasTag: 'AM_IS_ARE' });
+T('pp wrong be', 'She are using her phone now.', pp, 'pp', { grammarCorrect: false, hasTag: 'AM_IS_ARE' });
+T('pp no ing', 'She is use her phone now.', pp, 'pp', { grammarCorrect: false, hasTag: 'ING_FORM' });
+T('pp simple instead', 'She uses her phone now.', pp, 'pp', { grammarCorrect: false, hasTag: 'TENSE_SELECTION' });
+T('pp ing spelling', 'She is useing her phone now.', pp, 'pp', { grammarCorrect: true, spellingCorrect: false });
+const be = ['They are my friends.'];
+T('be correct', 'They are my friends.', be, 'be', { correct: true });
+T('be wrong', 'They is my friends.', be, 'be', { hasTag: 'AM_IS_ARE' });
+const psn = ["She doesn't use her phone at night."];
+T('ps neg correct', "She doesn't use her phone at night.", psn, 'ps_neg', { correct: true });
+T('ps neg long form', 'She does not use her phone at night', psn, 'ps_neg', { correct: true });
+T('ps neg don\'t', "She don't use her phone at night.", psn, 'ps_neg', { hasTag: 'DONT_DOESNT' });
+T('ps neg does+s', "She doesn't uses her phone at night.", psn, 'ps_neg', { hasTag: 'DOES_BASE_VERB' });
+T('ps neg no aux', 'She not use her phone at night.', psn, 'ps_neg', { hasTag: 'DONT_DOESNT' });
+const ppn = ["They aren't watching TV now."];
+T('pp neg correct', 'They are not watching TV now.', ppn, 'pp_neg', { correct: true });
+T('pp neg with don\'t', "They don't watching TV now.", ppn, 'pp_neg', { hasTag: 'PROGRESSIVE_NEGATIVE' });
+T('pp neg missing not', 'They are watching TV now.', ppn, 'pp_neg', { hasTag: 'PROGRESSIVE_NEGATIVE' });
+const psq = ['Does she call her mom every day?'];
+T('ps q correct', 'Does she call her mom every day?', psq, 'ps_q', { correct: true });
+T('ps q Do/Does', 'Do she call her mom every day?', psq, 'ps_q', { hasTag: 'DO_DOES_QUESTION' });
+T('ps q does+s', 'Does she calls her mom every day?', psq, 'ps_q', { hasTag: 'DOES_BASE_VERB' });
+T('ps q no aux', 'She calls her mom every day?', psq, 'ps_q', { hasTag: 'DO_DOES_QUESTION' });
+const ppq = ['Are they watching videos now?'];
+T('pp q correct', 'Are they watching videos now?', ppq, 'pp_q', { correct: true });
+T('pp q wrong be', 'Is they watching videos now?', ppq, 'pp_q', { hasTag: 'BE_QUESTION' });
+T('pp q no inversion', 'They are watching videos now?', ppq, 'pp_q', { hasTag: 'BE_QUESTION' });
+T('pp q do', 'Do they watching videos now?', ppq, 'pp_q', { hasTag: 'BE_QUESTION' });
+const wh = ['Where does she read the news?'];
+T('wh correct', 'Where does she read the news?', wh, 'wh_ps', { correct: true });
+T('wh no aux', 'Where she reads the news?', wh, 'wh_ps', { hasTag: 'WH_QUESTION' });
+T('wh wrong word', 'When does she read the news?', wh, 'wh_ps', { hasTag: 'WH_QUESTION' });
+T('wh does+s', 'Where does she reads the news?', wh, 'wh_ps', { hasTag: 'DOES_BASE_VERB' });
+const whp = ['What are you watching now?'];
+T('wh pp correct', 'What are you watching now?', whp, 'wh_pp', { correct: true });
+T('wh pp missing be', 'What you watching now?', whp, 'wh_pp', { grammarCorrect: false });
+console.log(fail ? `\n${fail} failing` : '\nAll structure tests pass');
+process.exit(fail ? 1 : 0);

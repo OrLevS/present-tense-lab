@@ -1,0 +1,19 @@
+{
+  "name": "present-tense-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Structured ESL learning platform: Present Simple vs. Present Progressive (grades 7-8), with Hebrew / Russian / Jerusalem Arabic / English support.",
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "reset-db": "node server/reset-db.js",
+    "test": "node tests/run-tests.js && node tests/structure-tests.js",
+    "validate-content": "node tests/validate-content.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.131.0"
+  }
+}
