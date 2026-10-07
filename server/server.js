@@ -55,7 +55,8 @@ const route = (method, pattern, role, handler) => {
 };
 
 // public
-route('GET', '/api/students/names', null, () => store.get().students.filter((s) => !s.isTest).map((s) => ({ id: s.id, name: s.name, language: s.language, hasPin: !!s.pin })));
+// archived students are hidden from the login screen (their data is kept)
+route('GET', '/api/students/names', null, () => store.get().students.filter((s) => !s.isTest && !s.archived).map((s) => ({ id: s.id, name: s.name, language: s.language, hasPin: !!s.pin })));
 route('POST', '/api/login', null, ({ body, req }) => {
   const db = store.get();
   const key = `${clientIp(req)}|${body.role}|${body.studentId || ''}`;
@@ -63,7 +64,7 @@ route('POST', '/api/login', null, ({ body, req }) => {
   let user = null;
   if (body.role === 'teacher' && String(body.pin) === db.teacher.pin) user = { role: 'teacher', id: db.teacher.id, name: db.teacher.name };
   if (body.role === 'student') {
-    const s = db.students.find((x) => x.id === body.studentId);
+    const s = db.students.find((x) => x.id === body.studentId && !x.archived);
     if (s && String(body.pin) === s.pin) user = { role: 'student', id: s.id, name: s.name, language: s.language };
   }
   if (!user) { fail(key); fail(`ip|${clientIp(req)}`); return { status: 401, body: { error: 'wrong_code' } }; }
@@ -78,7 +79,7 @@ function startSession(user) {
 // First login: a student without a code chooses one (4 digits). The teacher can see it and reset it.
 route('POST', '/api/student/first-pin', null, ({ body }) => {
   const db = store.get();
-  const s = db.students.find((x) => x.id === body.studentId);
+  const s = db.students.find((x) => x.id === body.studentId && !x.archived);
   if (!s) return { status: 404, body: { error: 'not found' } };
   if (s.pin) return { status: 409, body: { error: 'has_pin' } };
   if (!/^\d{4}$/.test(String(body.pin))) return { status: 400, body: { error: '4-digit code' } };
@@ -181,7 +182,9 @@ route('POST', '/api/teacher/students', 'teacher', ({ body }) => {
 route('PATCH', '/api/teacher/students/:id', 'teacher', ({ params, body }) => {
   const s = store.get().students.find((x) => x.id === params.id);
   if (!s) return { status: 404, body: { error: 'not found' } };
-  for (const k of ['name', 'language', 'difficultyPolicy', 'overrides']) if (body[k] !== undefined) s[k] = body[k];
+  if (body.name !== undefined) { const n = String(body.name).trim().slice(0, 40); if (!n) return { status: 400, body: { error: 'name required' } }; s.name = n; }
+  for (const k of ['language', 'difficultyPolicy', 'overrides']) if (body[k] !== undefined) s[k] = body[k];
+  if (body.archived !== undefined) { s.archived = !!body.archived; s.archivedAt = s.archived ? new Date().toISOString() : null; }
   // empty / null code = reset: the student chooses a new code at the next login
   if (body.pin !== undefined) {
     if (body.pin === null || body.pin === '') s.pin = null;

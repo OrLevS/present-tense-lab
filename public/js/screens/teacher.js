@@ -37,7 +37,10 @@ function shell(root, title, ...content) {
 // ============ CLASS OVERVIEW ============
 export async function teacherOverview(root) {
   await refresh();
-  const { students, responses, settings, events } = app.teacher;
+  const { settings, events } = app.teacher;
+  const students = app.teacher.students.filter((s) => !s.archived);
+  const active = new Set(students.map((s) => s.id));
+  const responses = app.teacher.responses.filter((r) => active.has(r.studentId));
   const rows = students.map((s) => {
     const rs = responses.filter((r) => r.studentId === s.id);
     const exit = rs.filter((r) => r.isExitTicket);
@@ -67,7 +70,8 @@ export async function teacherOverview(root) {
 // ============ STUDENTS ============
 export async function teacherStudents(root) {
   await refresh();
-  const { students } = app.teacher;
+  const students = app.teacher.students.filter((s) => !s.archived);
+  const archived = app.teacher.students.filter((s) => s.archived);
   const msg = h('p', { class: 'small', role: 'status' });
   const name = h('input', { class: 'field', placeholder: 'שם', 'aria-label': 'שם' });
   const pin = h('input', { class: 'field', placeholder: 'קוד (לא חובה)', inputmode: 'numeric', maxlength: 4, 'aria-label': 'קוד', style: { width: '140px' } });
@@ -86,12 +90,27 @@ export async function teacherStudents(root) {
               h('button', { class: 'btn small ghost', type: 'button', title: 'התלמיד/ה יבחר/תבחר קוד חדש בכניסה הבאה', onclick: async () => { if (confirm(`לאפס את הקוד של ${s.name}? בכניסה הבאה ${s.name} יבחר/תבחר קוד חדש.`)) { await save(s.id, { pin: null }); go(current()); } } }, 'איפוס קוד'))
           : h('span', { class: 'muted small' }, 'עוד לא נבחר — ייבחר בכניסה הראשונה');
         return h('tr', {},
-          h('td', {}, h('b', {}, s.name)),
+          h('td', {}, h('b', {}, s.name), ' ', h('button', { class: 'btn small ghost', type: 'button', 'aria-label': `שינוי השם של ${s.name}`, title: 'שינוי שם', onclick: async () => {
+            const n = prompt('שם חדש:', s.name);
+            if (n && n.trim() && n.trim() !== s.name) { await save(s.id, { name: n.trim() }); go(current()); }
+          } }, '✏️')),
           h('td', {}, pinIn),
           h('td', {}, langSelect(s.language, (v) => save(s.id, { language: v }))),
           h('td', {}, policySelect(s.difficultyPolicy, (v) => save(s.id, { difficultyPolicy: v }))),
-          h('td', {}, h('a', { href: `#/t/student/${s.id}`, class: 'btn small' }, 'פרטים וראיות')));
-      })))));
+          h('td', {}, h('div', { class: 'row', style: { gap: '6px' } },
+            h('a', { href: `#/t/student/${s.id}`, class: 'btn small' }, 'פרטים וראיות'),
+            h('button', { class: 'btn small ghost', type: 'button', title: 'מוסתר/ת מהכניסה ומסקירת הכיתה. כל הנתונים נשמרים.', onclick: async () => {
+              if (confirm(`להעביר את ${s.name} לארכיון?\n${s.name} לא יופיע/תופיע במסך הכניסה ובסקירת הכיתה. כל התשובות וההתקדמות נשמרות, ואפשר להחזיר בכל רגע.`)) { await save(s.id, { archived: true }); go(current()); }
+            } }, '🗄 לארכיון'))));
+      })))),
+    archived.length ? h('details', { class: 'card', style: { marginTop: '20px' } },
+      h('summary', { style: { cursor: 'pointer', fontWeight: 700 } }, `🗄 ארכיון (${archived.length})`),
+      h('p', { class: 'small muted' }, 'תלמידים בארכיון לא רואים את האפליקציה ולא נספרים בסקירת הכיתה. הנתונים שלהם שמורים.'),
+      archived.map((s) => h('div', { class: 'row', style: { justifyContent: 'space-between', borderBottom: '1px dashed var(--line)', padding: '8px 0' } },
+        h('span', {}, h('b', {}, s.name), s.archivedAt ? h('span', { class: 'small muted' }, ` · מאז ${fmtDate(s.archivedAt)}`) : null),
+        h('div', { class: 'row', style: { gap: '6px' } },
+          h('a', { href: `#/t/student/${s.id}`, class: 'btn small ghost' }, 'פרטים וראיות'),
+          h('button', { class: 'btn small', type: 'button', onclick: async () => { await save(s.id, { archived: false }); go(current()); } }, '↩ החזרה לכיתה'))))) : null);
   async function save(id, patch) {
     try { await api.updateStudent(id, patch); msg.textContent = 'נשמר ✓'; } catch { msg.textContent = 'השמירה נכשלה (קוד חייב להיות 4 ספרות).'; }
   }
