@@ -463,3 +463,35 @@ input.field, select.field, textarea.field { border: 2px solid var(--line); borde
   .ex-controls .icon-btn { min-width: 44px; padding: 4px 8px; }
   .lesson-body .card { padding: 14px 12px; }
 }
+
+/* ================= words you need: list + flashcards / memory / quiz ================= */
+.vw-list summary { cursor: pointer; font-weight: 700; font-size: 1.1rem; padding: 10px 4px; list-style: none; }
+.vw-list summary::-webkit-details-marker { display: none; }
+.vw-list summary::after { content: ' ▾'; color: var(--muted); }
+.vw-list[open] summary::after { content: ' ▴'; }
+.vw-list ul { list-style: none; margin: 0; padding: 0; }
+.vw-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.vw-emoji { width: 30px; text-align: center; font-size: 1.3rem; }
+.vw-word { all: unset; cursor: pointer; flex: 1; font-size: 1.25rem; font-weight: 600; direction: ltr; text-align: start; }
+.vw-word:focus-visible { outline: 4px solid var(--gold); }
+.vw-speak { font-size: .9rem; opacity: .6; }
+.modes { margin-top: 16px; background: var(--gold-soft); border-radius: var(--radius); padding: 14px; }
+.mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+.mode-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 84px; border-radius: var(--radius-sm); border: 3px solid var(--navy); background: var(--surface); font-weight: 600; font-size: .95rem; }
+.mode-btn:hover { background: var(--navy-soft); }
+.mode-ic { font-size: 1.8rem; }
+.flashcard { width: 100%; min-height: 230px; border-radius: var(--radius); border: 3px solid var(--navy); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; }
+.fc-emoji { font-size: 2.6rem; }
+.fc-front { font-size: 2.2rem; font-weight: 700; }
+.fc-front.dim { font-size: 1.4rem; opacity: .7; }
+.fc-back { font-size: 1.8rem; font-weight: 700; color: var(--teal-text); }
+.mem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin-top: 8px; }
+.mem-card { min-height: 84px; border-radius: 14px; border: 3px solid var(--navy); background: var(--navy); color: var(--gold); font-weight: 700; padding: 6px; }
+.mem-card .mem-face { display: none; color: var(--navy); font-size: 1.05rem; }
+.mem-card .mem-q { font-size: 1.8rem; }
+.mem-card.up { background: var(--surface); }
+.mem-card.up .mem-face { display: block; }
+.mem-card.up .mem-q { display: none; }
+.mem-card.matched { background: var(--teal-soft); border-color: var(--teal); }
+.quiz-q { font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 640px) { .mode-grid { grid-template-columns: 1fr 1fr 1fr; } .mode-btn { font-size: .85rem; min-height: 76px; } .mem-grid { grid-template-columns: repeat(3, 1fr); } }

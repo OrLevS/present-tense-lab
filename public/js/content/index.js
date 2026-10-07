@@ -112,12 +112,25 @@ function prepareLesson(lesson) {
       partSteps = [...partSteps.slice(0, at), { type: 'explain', explain: ex }, ...partSteps.slice(at)];
       explained.add(part.skill);
     }
+    // "Words you need": first step of every working part (replaces the older per-part "words" step)
+    const content = ['warm', 'end'].includes(part.id) ? [] : partSteps.flatMap((st) => st.items || []);
+    if (content.length && lesson.kind !== 'review') {
+      const ctx0 = { skill: part.skill, theme: lesson.theme, requiredSkills: part.requiredSkills };
+      const ids = [];
+      for (const st of partSteps) if (st.type === 'words') ids.push(...(st.words || []));
+      for (const it of content) for (const w of deriveRequirements(it, ctx0).requiredVocabulary) ids.push(w);
+      const words = [...new Set(ids)].filter((w) => WORD_BY_ID[w] && !['pronoun', 'possessive'].includes(WORD_BY_ID[w].kind));
+      if (words.length) partSteps = [{ type: 'vocab', words }, ...partSteps.filter((st) => st.type !== 'words')];
+    }
+    // stable ids: part · type · n-th of that type (adding a new step type never shifts saved progress)
+    const seenType = {};
     partSteps.forEach((st, i) => {
+      const nth = (seenType[st.type] = (seenType[st.type] ?? -1) + 1);
       const skill = st.skill || part.skill || null;
       const ctx = { skill, theme: lesson.theme, requiredSkills: st.requiredSkills || part.requiredSkills };
       steps.push({
         ...st,
-        id: st.id || `${part.id}.${st.type}.${i}`,
+        id: st.id || `${part.id}.${st.type}.${nth}`,
         partId: part.id, partTitle: part.title, partSkill: part.skill || null, skill,
         items: st.items ? st.items.map((it) => deriveRequirements(it, ctx)) : undefined,
       });

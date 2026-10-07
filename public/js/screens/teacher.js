@@ -200,8 +200,20 @@ export async function teacherStudent(root, { id }) {
     h('div', { class: 'row', style: { justifyContent: 'space-between' } }, h('h1', {}, s.name), h('a', { class: 'btn small', href: '#/t/overview' }, '→ חזרה לכיתה')),
     h('p', { class: 'muted' }, `שפת עזרה: ${LANGS[s.language]?.name} · רמת עזרה: ${LEVEL_HE[s.difficultyPolicy]} · ארגז כלים נפתח ${ev.filter((e) => e.type === 'toolbox_open').length} פעמים · עזרת מילים ${ev.filter((e) => e.type === 'vocab_lookup').length} פעמים (לא נחשב כטעות)`),
     evidence,
+    unknownWordsCard(ev),
     h('div', { class: 'grid2' }, exitCard, h('div', { class: 'card' }, h('h2', {}, 'מגמות שגיאה'), trends.length ? trends.map(([tag, n]) => h('div', { class: 'bar-row' }, h('span', {}, tagHe(tag)), h('div', { class: 'bar', style: { width: `${(n / Math.max(...trends.map((x) => x[1]))) * 100}%` } }), h('b', {}, n))) : h('p', { class: 'muted' }, 'אין שגיאות.'))),
     answersCard, progressCard, overrideCard, noteCard);
+}
+
+function unknownWordsCard(ev) {
+  const marked = {};
+  for (const e of ev.filter((x) => x.type === 'word_unknown')) marked[e.data?.word] = (marked[e.data?.word] || 0) + 1;
+  const practiced = new Set(ev.filter((x) => x.type === 'word_practice').flatMap((x) => x.data?.words || []));
+  const ids = Object.keys(marked);
+  return h('div', { class: 'card' }, h('h2', {}, 'מילים שסומנו כ"לא יודע/ת"'),
+    ids.length ? h('div', { class: 'chips' }, ids.map((id) => h('span', { class: 'chip word' }, en(WORD_BY_ID[id]?.en || id), h('span', { class: 'small muted' }, ` ${WORD_BY_ID[id]?.tr.he || ''}`), practiced.has(id) ? h('span', { class: 'small ok' }, ' · תרגל/ה ✓') : null)))
+      : h('p', { class: 'muted' }, 'עוד לא סומנו מילים.'),
+    h('p', { class: 'small muted' }, 'סימון מילה כלא ידועה ולמידה שלה הם עזרה — לא נחשבים כטעות.'));
 }
 
 // ============ CURRICULUM (skills) ============

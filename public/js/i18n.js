@@ -261,6 +261,25 @@ Object.assign(S, {
   too_many: { he: 'יותר מדי ניסיונות. נסו שוב בעוד כמה דקות, או בקשו עזרה מהמורה.', ru: 'Слишком много попыток. Попробуй через несколько минут или попроси учителя.', ar: 'محاولات كتير. جرّب كمان كم دقيقة، أو اطلب مساعدة من المعلّم/ة.', en: 'Too many tries. Try again in a few minutes, or ask your teacher.' },
 });
 
+Object.assign(S, {
+  step_vocab: { he: 'המילים של החלק', ru: 'Слова этой части', ar: 'كلمات هاد الجزء', en: 'Words for this part' },
+  do_vocab: { he: 'סמנו מילים שלא מכירים — ותלמדו אותן.', ru: 'Отметь незнакомые слова — и выучи их.', ar: 'علّم الكلمات اللي ما بتعرفها — وتعلّمها.', en: "Mark the words you don't know, then learn them." },
+  vocab_list: { he: 'המילים ({n})', ru: 'Слова ({n})', ar: 'الكلمات ({n})', en: 'The words ({n})' },
+  dont_know: { he: 'לא יודע/ת', ru: 'Не знаю', ar: 'ما بعرف', en: "I don't know" },
+  learn_marked: { he: 'ללמוד את המילים שסימנתי ({n})', ru: 'Выучить отмеченные слова ({n})', ar: 'أتعلّم الكلمات اللي علّمتها ({n})', en: 'Learn the words I marked ({n})' },
+  mode_flash: { he: 'כרטיסיות', ru: 'Карточки', ar: 'كروت', en: 'Flashcards' },
+  mode_memory: { he: 'משחק זיכרון', ru: 'Мемори', ar: 'لعبة ذاكرة', en: 'Memory game' },
+  mode_quiz: { he: 'שאלות', ru: 'Вопросы', ar: 'أسئلة', en: 'Questions' },
+  flip: { he: 'לחצו כדי להפוך', ru: 'Нажми, чтобы перевернуть', ar: 'اكبس لتقلب', en: 'Tap to flip' },
+  again: { he: 'עוד פעם', ru: 'Ещё раз', ar: 'كمان مرّة', en: 'Again' },
+  got_it: { he: 'יודע/ת ✓', ru: 'Знаю ✓', ar: 'بعرف ✓', en: 'I know it ✓' },
+  words_done: { he: 'כל הכבוד! עברת על כל המילים.', ru: 'Молодец! Ты прошёл(шла) все слова.', ar: 'يعطيك العافية! خلّصت كل الكلمات.', en: 'Well done! You went through all the words.' },
+  memory_done: { he: 'מצאת את כל הזוגות!', ru: 'Ты нашёл(шла) все пары!', ar: 'لقيت كل الأزواج!', en: 'You found all the pairs!' },
+  quiz_q: { he: 'מה זה', ru: 'Что значит', ar: 'شو يعني', en: 'What is' },
+  quiz_rev: { he: 'איך אומרים באנגלית:', ru: 'Как сказать по-английски:', ar: 'كيف منحكي بالإنجليزي:', en: 'In English:' },
+  back_to_words: { he: 'לרשימה', ru: 'К списку', ar: 'للقائمة', en: 'Word list' },
+});
+
 let current = 'he';
 export function setLang(l) { current = LANGS[l] ? l : 'he'; }
 export function getLang() { return current; }

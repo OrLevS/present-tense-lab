@@ -8,6 +8,7 @@ import { t, L, getLang, dir, fwd } from '../i18n.js';
 import { actionBar, clickableSentence, ruleCard } from '../ui/components.js';
 import { runExercise } from '../ui/runner.js';
 import { renderExplainer } from '../ui/explainer.js';
+import { renderVocabStep } from '../ui/vocabTrainer.js';
 import { MODULE_BY_ID, WORD_BY_ID, SKILL_BY_ID } from '../content/index.js';
 import { isItemAvailable, isSkillUnlocked } from '../logic/unlock.js';
 import { remediationNeeded } from '../logic/remediation.js';
@@ -24,7 +25,7 @@ export function lessonMinutes(lesson, level = 'medium') {
   }, 0);
 }
 
-const STEP_ICON = { warmup: '🔥', words: '🔤', guess: '🤔', explain: '🎬', learn: '💡', examples: '👀', check: '✅', choose: '🎚️', practice: '✏️', produce: '✍️', pause: '🧃', exit: '🎟️', challenge: '⭐' };
+const STEP_ICON = { vocab: '📋', warmup: '🔥', words: '🔤', guess: '🤔', explain: '🎬', learn: '💡', examples: '👀', check: '✅', choose: '🎚️', practice: '✏️', produce: '✍️', pause: '🧃', exit: '🎟️', challenge: '⭐' };
 
 // Estimated minutes per step (shown as "~5 min" — never a countdown timer)
 export function estMinutes(step, nItems) {
@@ -32,7 +33,7 @@ export function estMinutes(step, nItems) {
   const n = nItems ?? (step.items?.length || step.words?.length || step.guess?.length || 0);
   // average minutes per item: a choice ≈ 30 sec, a typed sentence ≈ 1 min, own writing ≈ 1.5 min
   const per = { words: 0.4, check: 0.5, warmup: 0.5, practice: 0.7, produce: 1.5, challenge: 1 };
-  const fixed = { guess: 2, explain: 2, learn: 2, examples: 2, choose: 1, pause: 2, exit: 4 };
+  const fixed = { vocab: 2, guess: 2, explain: 2, learn: 2, examples: 2, choose: 1, pause: 2, exit: 4 };
   return Math.max(1, Math.round(fixed[step.type] ?? n * (per[step.type] || 1)));
 }
 
@@ -60,6 +61,7 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
     completed: new Set(progress?.status === 'completed' ? steps.map((s) => s.id) : (progress?.completedSteps || []).filter((id) => typeof id === 'string')),
   };
 
+  let pathOpen = false; // lesson map (toggle) closed by default
   const page = h('div', { class: 'page lesson-page' });
   root.append(page);
 
@@ -103,6 +105,7 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
   function canOpen(i) { return freeNav || S.completed.has(steps[i].id) || i <= reached(); }
   function jump(i) {
     if (!canOpen(i) || i === S.stepIndex) return;
+    pathOpen = false; // close the lesson map after choosing a step
     S.stepIndex = i;
     if (steps[i].type === 'practice') S.practiceIndex = 0;
     save();
@@ -156,7 +159,6 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
   function stepLabel(s) { return s.title ? L(s.title) : t(`step_${s.type}`); }
 
   // ---------- "where am I": one slim bar; tap it to open the lesson map ----------
-  let pathOpen = false;
   function lessonBar(step) {
     const done = steps.filter((x) => S.completed.has(x.id)).length;
     const drawer = h('div', { class: `lesson-drawer ${pathOpen ? '' : 'hidden'}` }, pathPanel());
@@ -182,7 +184,7 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
     page.append(lessonBar(step), body);
     if (stepLocked(step) && !showAll) return lockedStep(body, step);
     if (stepLocked(step) && showAll) body.append(h('div', { class: 'warn', style: { marginBottom: '12px' } }, 'תצוגה מקדימה: החלק הזה נעול כרגע לתלמידים (מיומנות או מילים שלא סומנו כנלמדו).'));
-    const run = { warmup: stepItems, words: stepWords, guess: stepGuess, explain: stepExplain, learn: stepLearn, examples: stepExamples, check: stepItems, choose: stepChoose, practice: stepPractice, produce: stepItems, pause: stepPause, exit: stepExit, challenge: stepItems }[step.type];
+    const run = { vocab: stepVocab, warmup: stepItems, words: stepWords, guess: stepGuess, explain: stepExplain, learn: stepLearn, examples: stepExamples, check: stepItems, choose: stepChoose, practice: stepPractice, produce: stepItems, pause: stepPause, exit: stepExit, challenge: stepItems }[step.type];
     run(body, step);
   }
 
@@ -260,6 +262,14 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
     };
     if (!list.length) return nextStep();
     draw();
+  }
+
+  // ---------------- WORDS YOU NEED (list → "I don't know" → flashcards / memory / quiz) ----------------
+  function stepVocab(body, step) {
+    const log = (type, data) => { if (!preview && student) api.logEvent({ type, moduleId: lesson.id, itemId: step.id, data }); };
+    const v = renderVocabStep(step.words, { onLog: log });
+    const next = h('button', { class: 'btn primary', type: 'button', onclick: nextStep }, `${t('next')} ${fwd()}`);
+    body.append(h('div', { class: 'card' }, v.el), actionBar(h('span', { class: 'spacer' }), next));
   }
 
   // ---------------- EXPLAIN: animated word blocks (motion graphics) ----------------
