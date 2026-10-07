@@ -252,6 +252,11 @@ Object.assign(S, {
   code_tip: { he: 'זכרו את הקוד. שכחתם? המורה יכול/ה לעזור.', ru: 'Запомни код. Забыл(а)? Учитель поможет.', ar: 'تذكّر الكود. نسيته؟ المعلّم/ة بقدر يساعد.', en: 'Remember your code. Forgot it? Your teacher can help.' },
 });
 
+Object.assign(S, {
+  step_explain: { he: 'רואים את זה זז', ru: 'Смотрим, как это движется', ar: 'منشوفها بتتحرّك', en: 'See it move' },
+  do_explain: { he: 'צפו איך המילים זזות. אפשר לעצור, לחזור אחורה ולראות שוב.', ru: 'Смотри, как двигаются слова. Можно остановить, вернуться назад и посмотреть снова.', ar: 'شوف كيف الكلمات بتتحرّك. فيك توقّف، ترجع لورا، وتشوف كمان مرّة.', en: 'Watch how the words move. You can pause, go back and watch again.' },
+});
+
 let current = 'he';
 export function setLang(l) { current = LANGS[l] ? l : 'he'; }
 export function getLang() { return current; }

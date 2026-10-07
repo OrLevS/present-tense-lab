@@ -5,6 +5,7 @@ import { UNIT, SKILLS, OVERVIEW_COLUMNS, ERROR_TAGS } from './skills.js';
 import { WORDS, VOCAB_SETS, THEMES, FUNCTION_WORDS, NAMES, GRAMMAR_WORDS } from './vocabulary.js';
 import { TOOLBOX } from './toolbox.js';
 import { REVIEWS } from './modules/reviews.js';
+import { EXPLAINERS } from './explainers.js';
 import lessonA from './lessons/lesson_a_s_ing_progressive.js';
 import lessonB from './lessons/lesson_b_negatives_questions.js';
 import lessonC from './lessons/lesson_c_wh_questions.js';
@@ -100,8 +101,18 @@ function deriveRequirements(item, ctx) {
 // A lesson = parts (one skill each) → steps. Flattened here so the player sees one ordered list of steps.
 function prepareLesson(lesson) {
   const steps = [];
+  const explained = new Set();
   for (const part of lesson.parts) {
-    part.steps.forEach((st, i) => {
+    // animated explanation right after the guess: first part of each skill that has a guess + learn
+    let partSteps = part.steps;
+    const ex = EXPLAINERS[part.skill];
+    if (ex && !explained.has(part.skill) && partSteps.some((s) => s.type === 'learn') && !partSteps.some((s) => s.type === 'explain')) {
+      const gi = partSteps.findIndex((s) => s.type === 'guess');
+      const at = gi >= 0 ? gi + 1 : partSteps.findIndex((s) => s.type === 'learn'); // after the guess, or else right before "learn"
+      partSteps = [...partSteps.slice(0, at), { type: 'explain', explain: ex }, ...partSteps.slice(at)];
+      explained.add(part.skill);
+    }
+    partSteps.forEach((st, i) => {
       const skill = st.skill || part.skill || null;
       const ctx = { skill, theme: lesson.theme, requiredSkills: st.requiredSkills || part.requiredSkills };
       steps.push({
@@ -113,7 +124,8 @@ function prepareLesson(lesson) {
     });
   }
   const remediation = Object.fromEntries(Object.entries(lesson.remediation || {}).map(([tag, list]) => [tag, list.map((it) => deriveRequirements(it, { skill: it.grammarSkill, theme: lesson.theme }))]));
-  const skills = [...new Set(lesson.parts.map((p) => p.skill).filter(Boolean))];
+  // the lesson's own skills (the warm-up only reviews earlier skills)
+  const skills = [...new Set(lesson.parts.filter((p) => p.id !== 'warm').map((p) => p.skill).filter(Boolean))];
   return { ...lesson, kind: lesson.kind || 'lesson', steps, remediation, skills, grammarSkill: lesson.grammarSkill || skills[skills.length - 1] };
 }
 

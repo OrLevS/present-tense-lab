@@ -91,7 +91,7 @@ export function buildSeed() {
   R('s_noa', 'lesson_a', 'la_s_chat', 'medium', [['watches', 'reads', 'call']]);
   R('s_noa', 'lesson_a', 'la_s_sort', 'medium', [{ 0: 's', 1: 'no', 2: 's', 3: 'no', 4: 'no', 5: 's' }]);
   R('s_noa', 'lesson_a', 'la_x1', null, ['My brother uses his phone every day.'], { step: 'exit' });
-  db.progress.push({ id: 'p_noa', studentId: 's_noa', moduleId: 'lesson_a', status: 'in_progress', stepId: 'be.guess.0', difficulty: 'medium', practiceIndex: 0, completedSteps: ['warm.warmup.0', 'warm.choose.1', 's.words.0', 's.guess.1', 's.learn.2', 's.examples.3', 's.check.4', 's.practice.5', 's.practice.6', 's.produce.7', 'pause1.pause.0'], updatedAt: iso(clock) });
+  db.progress.push({ id: 'p_noa', studentId: 's_noa', moduleId: 'lesson_a', status: 'in_progress', stepId: 'be.guess.0', difficulty: 'medium', practiceIndex: 0, completedSteps: ['warm.warmup.0', 'warm.choose.1', 's.words.0', 's.guess.1', 's.explain.2', 's.learn.3', 's.examples.4', 's.check.5', 's.practice.6', 's.practice.7', 's.produce.8', 'pause1.pause.0'], updatedAt: iso(clock) });
 
   // ---------- Artyom: mid-practice (Medium) → practicing ----------
   clock = now - 1440 * 60000;
@@ -104,7 +104,7 @@ export function buildSeed() {
   R('s_artyom', 'lesson_a', 'tps_p03', 'medium', ['He calls his freind after school.', 'He calls his friend after school.'], { support: { verbSupplied: true } });
   const ar4 = R('s_artyom', 'lesson_a', 'tps_p04', 'medium', ['My mom read the news every morning.', 'My mom reads the news every morning.'], { support: { verbSupplied: true, wordBank: true }, hints: 1, toolbox: true });
   R('s_artyom', 'lesson_a', 'tps_p05', 'medium', ['We watch videos on weekends.']);
-  db.progress.push({ id: 'p_artyom', studentId: 's_artyom', moduleId: 'lesson_a', status: 'in_progress', stepId: 's.practice.5', difficulty: 'medium', practiceIndex: 5, completedSteps: ['warm.warmup.0', 'warm.choose.1', 's.words.0', 's.guess.1', 's.learn.2', 's.examples.3', 's.check.4'], updatedAt: iso(clock) });
+  db.progress.push({ id: 'p_artyom', studentId: 's_artyom', moduleId: 'lesson_a', status: 'in_progress', stepId: 's.practice.6', difficulty: 'medium', practiceIndex: 5, completedSteps: ['warm.warmup.0', 'warm.choose.1', 's.words.0', 's.guess.1', 's.explain.2', 's.learn.3', 's.examples.4', 's.check.5'], updatedAt: iso(clock) });
   db.events.push({ id: 'ev1', studentId: 's_artyom', type: 'toolbox_open', moduleId: 'lesson_a', itemId: 'tps_p04', timestamp: ar4.timestamp });
   ar4.teacherFeedback = 'Great fix! Remember: my mom = she → reads.';
   db.notes.push({ id: 'n1', studentId: 's_artyom', responseId: ar4.id, text: 'Great fix! Remember: my mom = she → reads.', createdAt: iso(clock) });
@@ -123,7 +123,7 @@ export function buildSeed() {
   R('s_rami', 'lesson_a', 'tps_r3', null, ['reads'], { step: 'remediation' });
   R('s_rami', 'lesson_a', 'tps_p04', 'easy', ['reads']);
   R('s_rami', 'lesson_a', 'tps_p05', 'easy', ['watches', 'watch']);
-  db.progress.push({ id: 'p_rami', studentId: 's_rami', moduleId: 'lesson_a', status: 'in_progress', stepId: 's.practice.5', difficulty: 'easy', practiceIndex: 6, completedSteps: ['warm.warmup.0', 'warm.choose.1', 's.words.0', 's.guess.1', 's.learn.2', 's.examples.3', 's.check.4'], updatedAt: iso(clock) });
+  db.progress.push({ id: 'p_rami', studentId: 's_rami', moduleId: 'lesson_a', status: 'in_progress', stepId: 's.practice.6', difficulty: 'easy', practiceIndex: 6, completedSteps: ['warm.warmup.0', 'warm.choose.1', 's.words.0', 's.guess.1', 's.explain.2', 's.learn.3', 's.examples.4', 's.check.5'], updatedAt: iso(clock) });
   db.events.push({ id: 'ev2', studentId: 's_rami', type: 'toolbox_open', moduleId: 'lesson_a', itemId: 'tps_p02', timestamp: iso(clock) });
   db.events.push({ id: 'ev3', studentId: 's_rami', type: 'remediation', moduleId: 'lesson_a', data: { tag: 'THIRD_PERSON_S' }, timestamp: iso(clock) });
 

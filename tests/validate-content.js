@@ -8,7 +8,7 @@ import { resolveConfig, scoreAttempt } from '../public/js/logic/score.js';
 
 const TYPES = new Set(['multiple_choice', 'choose_sentence', 'fill_blank', 'sentence_builder', 'translate', 'translate_multi', 'error_correction', 'free_production',
   'transform', 'sort', 'match', 'pair_fill', 'text_gaps', 'listen_choose', 'wh_scaffold']);
-const STEP_TYPES = new Set(['warmup', 'words', 'guess', 'learn', 'examples', 'check', 'choose', 'practice', 'produce', 'pause', 'exit', 'challenge']);
+const STEP_TYPES = new Set(['warmup', 'words', 'guess', 'explain', 'learn', 'examples', 'check', 'choose', 'practice', 'produce', 'pause', 'exit', 'challenge']);
 const LANGS = ['he', 'ru', 'ar', 'en'];
 const problems = [];
 const warn = (m, it, msg) => problems.push(`${m.id} › ${it?.id || '-'}: ${msg}`);

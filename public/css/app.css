@@ -351,16 +351,7 @@ input.field, select.field, textarea.field { border: 2px solid var(--line); borde
 .other-levels summary { cursor: pointer; color: var(--muted); padding: 8px 0; }
 .lesson-bar .icon-btn { font-weight: 500; }
 
-@media (max-width: 900px) {
-  .lesson { grid-template-columns: 1fr; }
-  .lesson-path { position: static; padding: 12px 14px; }
-  .lesson-path .lp-title, .lesson-path > p { display: none; }
-  /* steps become one horizontal, scrollable row on small screens */
-  .timeline.compact { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
-  .timeline.compact .tl-item { padding: 0; flex: none; }
-  .timeline.compact .tl-item::before { display: none; }
-  .timeline.compact .tl-link { font-size: .8rem; padding: 4px 6px; }
-}
+
 
 /* ================= lesson parts + new exercise types ================= */
 .parts { list-style: none; margin: 0; padding: 0; }
@@ -420,3 +411,55 @@ input.field, select.field, textarea.field { border: 2px solid var(--line); borde
 .dotstat.mastered { background: var(--teal); border-color: var(--teal); }
 .dotstat.practicing { background: var(--gold); border-color: var(--gold); }
 .dotstat.needs_support { background: var(--coral); border-color: var(--coral); }
+
+/* ================= animated explainer (motion graphics in the app) ================= */
+.explainer { margin-top: 6px; }
+.ex-screen { position: relative; background: var(--cream); border: 3px solid var(--navy); border-radius: var(--radius); min-height: 280px; padding: 26px 18px 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; overflow: hidden;
+  background-image: radial-gradient(color-mix(in srgb, var(--beige) 70%, transparent) 1.2px, transparent 1.2px); background-size: 22px 22px; }
+.ex-stage { position: relative; display: flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; }
+.ex-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
+.blk2 { display: inline-block; padding: 10px 18px; border-radius: 14px; border: 3px solid var(--navy); background: var(--surface); font-size: clamp(1.4rem, 3.4vw, 2.2rem); font-weight: 600; color: var(--navy); white-space: nowrap; transform-origin: center; }
+.blk2.gold { background: var(--gold); border-color: var(--gold); color: var(--brown); }
+.blk2.glue { margin-inline-start: -14px; border-start-start-radius: 4px; border-end-start-radius: 4px; padding-inline: 8px 14px; }
+.blk2.strike { text-decoration: line-through 4px var(--coral); opacity: .75; }
+.blk2.pic { border: 0; background: transparent; padding: 0 4px; font-size: 2rem; }
+.ex-icons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; min-height: 0; }
+.ex-icon { background: var(--surface); border: 2px solid var(--line); border-radius: 12px; padding: 4px 12px; font-size: 1.1rem; font-weight: 600; }
+.ex-tag { position: absolute; top: 12px; inset-inline-start: 14px; background: var(--navy); color: #fff; border-radius: 999px; padding: 3px 14px; font-weight: 700; font-size: .95rem; direction: ltr; }
+.ex-caption { font-size: 1.3rem; font-weight: 600; text-align: center; margin: 14px 0 8px; min-height: 2.2em; }
+.ex-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.ex-dots { display: flex; gap: 6px; }
+.ex-dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+.ex-dots i.on { background: var(--teal); }
+.ex-controls { display: flex; gap: 8px; }
+
+/* ================= phone-first lesson bar (toggle) ================= */
+.page.lesson-page { max-width: 780px; }
+.lesson-bar { position: sticky; top: 64px; z-index: 8; background: var(--bg); padding: 4px 0 10px; margin-bottom: 4px; }
+.lesson-bar-btn { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 10px; background: var(--navy); color: #fff; border-radius: 999px; padding: 8px 16px; min-height: 48px; }
+.lesson-bar-btn:focus-visible { outline: 4px solid var(--gold); }
+.lb-icon { font-size: 1.2rem; }
+.lb-title { flex: 1; font-weight: 700; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-count { font-size: .85rem; opacity: .85; direction: ltr; }
+.lb-caret { font-size: 1.1rem; }
+.progressline.slim { height: 6px; margin: 8px 12px 0; }
+.lesson-drawer { margin-top: 10px; }
+.lesson-drawer .lesson-path { position: static; max-height: 60vh; overflow: auto; }
+.lp-title { font-weight: 700; margin-bottom: 10px; }
+@media (max-width: 640px) {
+  .icon-btn .lbl { display: none; }
+  .lesson-bar { top: 60px; }
+  .ex-screen { min-height: 220px; padding: 22px 8px 26px; }
+  .blk2 { padding: 8px 12px; border-radius: 12px; }
+  .ex-caption { font-size: 1.1rem; }
+  .instruction { font-size: 1rem; }
+  .prompt-card .prompt { font-size: 1.2rem; }
+}
+.preview-banner { padding: 6px 14px; gap: 8px; }
+.preview-banner .btn.small { min-height: 34px; padding: 2px 12px; color: var(--cream); border-color: transparent; }
+@media (max-width: 640px) {
+  .ex-screen { min-height: 190px; }
+  .ex-bar { justify-content: center; }
+  .ex-controls .icon-btn { min-width: 44px; padding: 4px 8px; }
+  .lesson-body .card { padding: 14px 12px; }
+}

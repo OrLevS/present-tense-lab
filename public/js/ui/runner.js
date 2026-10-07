@@ -157,8 +157,7 @@ export function runExercise(mount, { module, item, level, mode, index, total, on
       const box = h('div', { class: 'feedback reveal' }, h('div', { class: 'title' }, fb.text));
       if (fb.reveal) {
         box.append(h('div', { class: 'reveal-text' }, clickableSentence(fb.reveal)));
-        if (typed) box.append(h('p', { class: 'small muted' }, t('reveal_type')),
-          h('input', { class: 'answer', dir: 'ltr', lang: 'en', style: { minHeight: '56px' }, autocomplete: 'off', spellcheck: 'false', 'aria-label': t('reveal_type') }));
+        if (typed) box.append(h('input', { class: 'answer', dir: 'ltr', lang: 'en', style: { minHeight: '56px', marginTop: '10px' }, autocomplete: 'off', spellcheck: 'false', placeholder: t('reveal_type'), 'aria-label': t('reveal_type') }));
       }
       if (fb.models) box.append(...fb.models.map((m) => h('div', { class: 'reveal-text' }, clickableSentence(m))), h('p', { class: 'small muted' }, t('teacher_will_see')));
       if (fb.rule) box.append(ruleCard(fb.rule));

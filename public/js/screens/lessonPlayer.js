@@ -7,6 +7,7 @@ import { h, clear, bidi, en, speakBtn, shuffle, highlightEn, markEnding } from '
 import { t, L, getLang, dir, fwd } from '../i18n.js';
 import { actionBar, clickableSentence, ruleCard } from '../ui/components.js';
 import { runExercise } from '../ui/runner.js';
+import { renderExplainer } from '../ui/explainer.js';
 import { MODULE_BY_ID, WORD_BY_ID, SKILL_BY_ID } from '../content/index.js';
 import { isItemAvailable, isSkillUnlocked } from '../logic/unlock.js';
 import { remediationNeeded } from '../logic/remediation.js';
@@ -23,13 +24,15 @@ export function lessonMinutes(lesson, level = 'medium') {
   }, 0);
 }
 
+const STEP_ICON = { warmup: '🔥', words: '🔤', guess: '🤔', explain: '🎬', learn: '💡', examples: '👀', check: '✅', choose: '🎚️', practice: '✏️', produce: '✍️', pause: '🧃', exit: '🎟️', challenge: '⭐' };
+
 // Estimated minutes per step (shown as "~5 min" — never a countdown timer)
 export function estMinutes(step, nItems) {
   if (step.estMin) return step.estMin;
   const n = nItems ?? (step.items?.length || step.words?.length || step.guess?.length || 0);
   // average minutes per item: a choice ≈ 30 sec, a typed sentence ≈ 1 min, own writing ≈ 1.5 min
   const per = { words: 0.4, check: 0.5, warmup: 0.5, practice: 0.7, produce: 1.5, challenge: 1 };
-  const fixed = { guess: 2, learn: 2, examples: 2, choose: 1, pause: 2, exit: 4 };
+  const fixed = { guess: 2, explain: 2, learn: 2, examples: 2, choose: 1, pause: 2, exit: 4 };
   return Math.max(1, Math.round(fixed[step.type] ?? n * (per[step.type] || 1)));
 }
 
@@ -127,11 +130,7 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
       part.steps.push([i, s]);
     }
     return h('nav', { class: 'lesson-path', 'aria-label': t('lesson_path') },
-      h('div', { class: 'section-label' }, t('lesson_path')),
-      h('h2', { class: 'lp-title' }, bidi(L(lesson.title))),
-      h('p', { class: 'small muted' }, t('lesson_total', { n: total })),
-      h('div', { class: 'progressline' }, h('span', { style: { width: `${Math.max(4, (done / steps.length) * 100)}%` } })),
-      h('div', { class: 'small muted', style: { marginBottom: '10px' } }, t('steps_done', { done, total: steps.length })),
+      h('div', { class: 'lp-title' }, bidi(L(lesson.title)), h('span', { class: 'muted small' }, ` · ${t('about_min', { n: total })}`)),
       h('ol', { class: 'parts' }, parts.map((part) => {
         const isCur = part.id === cur.partId;
         const allDone = part.steps.every(([, s]) => S.completed.has(s.id));
@@ -147,7 +146,7 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
           return h('li', { class: `tl-item ${state}` },
             h('span', { class: 'tl-dot', 'aria-hidden': 'true' }, state === 'done' ? '✓' : state === 'now' ? '▶' : stepLocked(s) ? '🔒' : '·'),
             h('button', { class: 'tl-link', type: 'button', disabled: !open, 'aria-current': state === 'now' ? 'step' : null, onclick: () => jump(i) },
-              stepLabel(s), h('span', { class: 'small muted' }, ` · ${t('about_min', { n: minutes(s) })}`)));
+              stepLabel(s)));
         })) : null;
         return h('li', { class: 'part' }, head, list);
       })),
@@ -156,20 +155,22 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
   }
   function stepLabel(s) { return s.title ? L(s.title) : t(`step_${s.type}`); }
 
-  // ---------- "where am I / what do I do now" ----------
-  function nowBox(step) {
-    const prev = steps[S.stepIndex - 1];
-    const next = steps[S.stepIndex + 1];
-    return h('div', { class: 'nowbox' },
-      h('div', { class: 'crumbs' },
-        prev ? h('span', {}, `📍 ${t('was_here')}: `, stepLabel(prev), ` ${fwd()} `) : '📍 ',
-        h('b', {}, `${t('now_label')}: ${stepLabel(step)}`),
-        next ? h('span', {}, ` ${fwd()} ${t('next_up')}: `, stepLabel(next)) : null),
-      h('div', { class: 'now-badge' }, `${bidi(L(step.partTitle)).textContent} · ${t('about_min', { n: minutes(step) })}`),
-      h('h1', {}, stepLabel(step)),
-      h('p', { class: 'now-do' }, bidi(t(`do_${step.type}`, { n: countFor(step) }))),
-      S.completed.has(step.id) ? h('div', { class: 'row small', style: { marginTop: '8px' } }, h('span', {}, t('step_done_again')),
-        next ? h('button', { class: 'btn small', type: 'button', onclick: () => jump(S.stepIndex + 1) }, `${t('skip_to_next')} ${fwd()}`) : null) : null);
+  // ---------- "where am I": one slim bar; tap it to open the lesson map ----------
+  let pathOpen = false;
+  function lessonBar(step) {
+    const done = steps.filter((x) => S.completed.has(x.id)).length;
+    const drawer = h('div', { class: `lesson-drawer ${pathOpen ? '' : 'hidden'}` }, pathPanel());
+    const toggle = h('button', { class: 'lesson-bar-btn', type: 'button', 'aria-expanded': String(pathOpen), onclick: () => {
+      pathOpen = !pathOpen; drawer.classList.toggle('hidden', !pathOpen); toggle.setAttribute('aria-expanded', String(pathOpen)); caret.textContent = pathOpen ? '▴' : '▾';
+    } },
+      h('span', { class: 'lb-icon', 'aria-hidden': 'true' }, STEP_ICON[step.type] || '▶'),
+      h('span', { class: 'lb-title' }, stepLabel(step), S.completed.has(step.id) ? ' ✓' : ''),
+      h('span', { class: 'lb-count' }, `${S.stepIndex + 1}/${steps.length}`));
+    const caret = h('span', { class: 'lb-caret', 'aria-hidden': 'true' }, pathOpen ? '▴' : '▾');
+    toggle.append(caret);
+    return h('div', { class: 'lesson-bar' }, toggle,
+      h('div', { class: 'progressline slim' }, h('span', { style: { width: `${Math.max(3, (done / steps.length) * 100)}%` } })),
+      drawer);
   }
 
   function render() {
@@ -178,10 +179,10 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
     const step = steps[S.stepIndex];
     app.currentSkill = step.skill;
     const body = h('div', { class: 'lesson-body' });
-    page.append(h('div', { class: 'lesson' }, pathPanel(), h('div', { class: 'lesson-main' }, nowBox(step), body)));
+    page.append(lessonBar(step), body);
     if (stepLocked(step) && !showAll) return lockedStep(body, step);
     if (stepLocked(step) && showAll) body.append(h('div', { class: 'warn', style: { marginBottom: '12px' } }, 'תצוגה מקדימה: החלק הזה נעול כרגע לתלמידים (מיומנות או מילים שלא סומנו כנלמדו).'));
-    const run = { warmup: stepItems, words: stepWords, guess: stepGuess, learn: stepLearn, examples: stepExamples, check: stepItems, choose: stepChoose, practice: stepPractice, produce: stepItems, pause: stepPause, exit: stepExit, challenge: stepItems }[step.type];
+    const run = { warmup: stepItems, words: stepWords, guess: stepGuess, explain: stepExplain, learn: stepLearn, examples: stepExamples, check: stepItems, choose: stepChoose, practice: stepPractice, produce: stepItems, pause: stepPause, exit: stepExit, challenge: stepItems }[step.type];
     run(body, step);
   }
 
@@ -206,7 +207,6 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
       const result = h('div', {});
       const nextBtn = h('button', { class: 'btn primary', type: 'button', disabled: true, onclick: () => { i += 1; i < words.length ? draw() : nextStep(); } }, `${t('next')} ${fwd()}`);
       const card = h('div', { class: 'card' },
-        i === 0 ? h('p', { class: 'muted' }, t('words_intro')) : null,
         h('div', { class: 'instruction' }, h('span', { class: 'num' }, `${i + 1}/${words.length}`), h('span', {}, bidi(t('guess_meaning', { word: w.en })))),
         h('div', { class: 'row', style: { marginBottom: '16px' } }, h('span', { class: 'en-big en', style: { fontSize: '2rem' } }, w.en), speakBtn(w.en, `🔊 ${t('listen')}`)),
         h('div', { class: 'options' }, opts.map((o) => h('button', {
@@ -223,7 +223,6 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
             nextBtn.disabled = false; nextBtn.focus();
           },
         }, meaning(o)))),
-        h('p', { class: 'small muted', style: { marginTop: '12px' } }, t('guess_note')),
         result);
       body.append(card, actionBar(h('span', { class: 'spacer' }), nextBtn));
     };
@@ -256,12 +255,20 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
             nextBtn.disabled = false; nextBtn.focus();
           },
         }, o.en ? en(L(o.label)) : bidi(L(o.label))))),
-        h('p', { class: 'small muted', style: { marginTop: '12px' } }, t('guess_note')),
         result);
       body.append(card, actionBar(h('span', { class: 'spacer' }), nextBtn));
     };
     if (!list.length) return nextStep();
     draw();
+  }
+
+  // ---------------- EXPLAIN: animated word blocks (motion graphics) ----------------
+  let explainer = null;
+  function stepExplain(body, step) {
+    explainer?.stop();
+    explainer = renderExplainer(step.explain);
+    body.append(h('div', { class: 'card' }, h('h2', {}, bidi(L(step.explain.title))), explainer.el),
+      actionBar(h('span', { class: 'spacer' }), h('button', { class: 'btn primary', type: 'button', onclick: () => { explainer.stop(); nextStep(); } }, `${t('next')} ${fwd()}`)));
   }
 
   // ---------------- LEARN (one rule, visual) ----------------
@@ -293,7 +300,6 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
     const lang = getLang();
     body.append(h('div', { class: 'card' },
       h('h2', {}, t('examples_title')),
-      h('p', { class: 'small muted' }, t('tap_word')),
       step.examples.map((x) => {
         const tr = h('div', { class: 'tr hidden', dir: lang === 'en' ? 'ltr' : dir(lang), lang }, L(x.tr));
         return h('div', { class: 'example' },
@@ -382,7 +388,7 @@ export function lessonPlayer(root, lessonOrId, { previewLevel } = {}) {
     const others = h('details', { class: 'other-levels' }, h('summary', {}, t('other_level')),
       h('div', { class: 'stack', style: { marginTop: '10px' } }, ['easy', 'medium', 'hard'].map((lv) => h('button', { class: 'levelcard', type: 'button', onclick: () => { S.level = lv; draw(); others.open = false; } },
         h('div', { class: 'lvl' }, t(`level_${lv}`), ' ', h('span', { class: 'dots', 'aria-hidden': 'true' }, dots[lv])), h('div', { class: 'small' }, bidi(t(`level_${lv}_desc`)))))));
-    body.append(h('div', { class: 'card' }, shown, h('p', { class: 'muted small', style: { marginTop: '12px' } }, t('choose_sub')), others),
+    body.append(h('div', { class: 'card' }, shown, others),
       actionBar(h('span', { class: 'spacer' }), main));
   }
 

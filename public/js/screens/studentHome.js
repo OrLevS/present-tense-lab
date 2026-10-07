@@ -31,20 +31,18 @@ export function studentHome(root) {
   const unfinished = (m) => progressOf(m)?.status !== 'completed';
   const next = MODULES.find((m) => lessonOpen(m) && isAssigned(m, app.assignments, student.id) && unfinished(m)) || MODULES.find((m) => lessonOpen(m) && unfinished(m));
   const hero = h('div', { class: 'card hero' },
-    h('div', { class: 'section-label' }, L(UNIT.title)),
     h('h1', {}, t('hello', { name: student.name })));
   if (next) {
     const done = stepsDone(next);
     const p = progressOf(next);
     const cur = p && next.steps.find((st) => st.id === p.stepId);
     hero.append(
-      h('p', { class: 'section-label', style: { marginTop: '8px' } }, t('next_for_you')),
+
       h('div', { class: 'row', style: { justifyContent: 'space-between' } },
         h('div', {},
           h('h2', { style: { margin: 0 } }, bidi(L(next.title))),
-          h('div', { class: 'muted' }, bidi(L(next.goal))),
           h('div', { class: 'progressline', style: { margin: '10px 0 4px', maxWidth: '360px' } }, h('span', { style: { width: `${Math.max(4, (done / next.steps.length) * 100)}%` } })),
-          h('div', { class: 'small muted' }, t('steps_done', { done, total: next.steps.length }), ' · ', t('about_min', { n: lessonMinutes(next) }), cur ? ` · ${t('now_label')}: ${cur.title ? L(cur.title) : t(`step_${cur.type}`)}` : '')),
+          h('div', { class: 'small muted' }, `${done}/${next.steps.length}`)),
         h('button', { class: 'btn primary big', type: 'button', onclick: () => go(`/s/module/${next.id}`) }, `${t(p ? 'continue' : 'start')} ${fwd()}`)));
   } else {
     hero.append(h('p', {}, t('no_task')));
@@ -79,7 +77,7 @@ export function studentHome(root) {
 
   page.append(h('div', { class: 'card' },
     h('h2', {}, `🗺️ ${t('my_path')}`),
-    h('p', { class: 'muted small' }, t('my_path_sub')),
+
     h('ol', { class: 'timeline' }, reviewNode, MODULES.map((m) => lessonNode(m)), later.map((sk) => skillPeekNode(sk)))));
 
   function lessonNode(m) {
@@ -98,13 +96,12 @@ export function studentHome(root) {
       h('div', { class: 'row', style: { justifyContent: 'space-between' } },
         h('div', {}, h('div', { class: 'tl-state' }, `${t('lesson_word')} ${m.order} · ${t('about_min', { n: lessonMinutes(m) })}`), h('h3', { style: { margin: 0 } }, bidi(L(m.title)))),
         isAssigned(m, app.assignments, student.id) ? h('span', { class: 'pill-ok' }, t('teacher_task')) : null),
-      h('div', { class: 'small muted' }, bidi(L(m.goal))),
       chips);
     if (open) {
       body.append(h('div', { class: 'lesson-row' },
         h('div', { style: { flex: 1, minWidth: '220px' } },
           h('div', { class: 'progressline', style: { margin: '0 0 2px' } }, h('span', { style: { width: `${Math.max(4, (done / m.steps.length) * 100)}%` } })),
-          h('div', { class: 'small muted' }, t('steps_done', { done, total: m.steps.length }))),
+          h('div', { class: 'small muted' }, `${done}/${m.steps.length}`)),
         h('button', { class: `btn ${completed ? '' : 'primary'}`, type: 'button', onclick: () => go(`/s/module/${m.id}`) }, completed ? t('do_again') : `${t(p ? 'continue' : 'start')} ${fwd()}`)));
     } else {
       body.append(h('button', { class: 'btn small', type: 'button', onclick: () => peek(null, m) }, `👀 ${t('peek')}`));

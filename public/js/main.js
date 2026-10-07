@@ -44,7 +44,7 @@ function studentShell(mode = 'dashboard') {
       ? h('button', { class: 'icon-btn', type: 'button', onclick: () => go('/s/home') }, `${bwd()} ${t('back_dashboard')}`)
       : h('button', { class: 'brand', type: 'button', onclick: () => go(app.preview ? '/t/modules' : '/s/home') }, h('span', { class: 'logo', 'aria-hidden': 'true' }, 'S'), h('span', {}, app.preview ? 'Preview' : app.user.name)),
     h('span', { class: 'spacer' }),
-    h('button', { class: 'icon-btn', type: 'button', onclick: openToolbox }, '🧰 ', t('toolbox')),
+    h('button', { class: 'icon-btn', type: 'button', onclick: openToolbox, 'aria-label': t('toolbox'), title: t('toolbox') }, '🧰', h('span', { class: 'lbl' }, ` ${t('toolbox')}`)),
     lesson && !app.preview ? null : h('label', { class: 'sr-only', for: 'langsel' }, t('help_language')),
     lesson && !app.preview ? null : lang,
     app.preview || lesson ? null : h('button', { class: 'icon-btn', type: 'button', onclick: isTestMode() ? backToTeacher : logout }, isTestMode() ? 'חזרה למורה' : t('logout')));
@@ -75,9 +75,9 @@ function backToTeacher() {
 }
 function testBanner() {
   return h('div', { class: 'preview-banner', dir: 'rtl', lang: 'he' },
-    h('b', {}, '👁 תצוגת תלמיד — מצב בדיקה'), ' אתם תלמיד/ה לדוגמה: אותן נעילות והגדרות כמו לכיתה. ההתקדמות נשמרת רק לתלמיד הבדיקה ולא מופיעה בנתוני הכיתה.',
-    h('button', { class: 'btn small ghost', type: 'button', onclick: async () => { if (confirm('למחוק את כל ההתקדמות של תלמיד הבדיקה ולהתחיל מחדש?')) { await api.resetTestStudent(); location.hash = '/s/home'; location.reload(); } } }, '↺ איפוס תלמיד הבדיקה'),
-    h('button', { class: 'btn small ghost', type: 'button', onclick: backToTeacher }, '← חזרה ללוח המורה'));
+    h('b', { title: 'תלמיד/ה לדוגמה: אותן נעילות כמו לכיתה. ההתקדמות לא נכנסת לנתוני הכיתה.' }, '👁 מצב בדיקה'),
+    h('button', { class: 'btn small ghost', type: 'button', onclick: async () => { if (confirm('למחוק את כל ההתקדמות של תלמיד הבדיקה ולהתחיל מחדש?')) { await api.resetTestStudent(); location.hash = '/s/home'; location.reload(); } } }, '↺ איפוס'),
+    h('button', { class: 'btn small ghost', type: 'button', onclick: backToTeacher }, '← למורה'));
 }
 
 function teacherShell() {
