@@ -17,6 +17,22 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 
 const sessions = new Map(); // token → { role, id }
 
+// Codes are only 4 digits, so wrong guesses are limited: 8 wrong tries per person per 10 minutes, then a short lock.
+const failures = new Map(); // key → { n, until }
+const MAX_FAILS = 8, WINDOW_MS = 10 * 60 * 1000;
+const clientIp = (req) => String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+function tooMany(key) {
+  const f = failures.get(key);
+  if (!f) return false;
+  if (Date.now() > f.until) { failures.delete(key); return false; }
+  return f.n >= MAX_FAILS;
+}
+function fail(key) {
+  const f = failures.get(key);
+  if (!f || Date.now() > f.until) failures.set(key, { n: 1, until: Date.now() + WINDOW_MS });
+  else f.n += 1;
+}
+
 // ---------- helpers ----------
 const send = (res, status, body) => {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -40,15 +56,18 @@ const route = (method, pattern, role, handler) => {
 
 // public
 route('GET', '/api/students/names', null, () => store.get().students.filter((s) => !s.isTest).map((s) => ({ id: s.id, name: s.name, language: s.language, hasPin: !!s.pin })));
-route('POST', '/api/login', null, ({ body }) => {
+route('POST', '/api/login', null, ({ body, req }) => {
   const db = store.get();
+  const key = `${clientIp(req)}|${body.role}|${body.studentId || ''}`;
+  if (tooMany(key) || (failures.get(`ip|${clientIp(req)}`)?.n || 0) >= 60) return { status: 429, body: { error: 'too_many' } };
   let user = null;
   if (body.role === 'teacher' && String(body.pin) === db.teacher.pin) user = { role: 'teacher', id: db.teacher.id, name: db.teacher.name };
   if (body.role === 'student') {
     const s = db.students.find((x) => x.id === body.studentId);
     if (s && String(body.pin) === s.pin) user = { role: 'student', id: s.id, name: s.name, language: s.language };
   }
-  if (!user) return { status: 401, body: { error: 'wrong_code' } };
+  if (!user) { fail(key); fail(`ip|${clientIp(req)}`); return { status: 401, body: { error: 'wrong_code' } }; }
+  failures.delete(key);
   return startSession(user);
 });
 function startSession(user) {
@@ -243,7 +262,7 @@ const server = http.createServer(async (req, res) => {
       const m = url.pathname.match(r.re);
       const params = Object.fromEntries(r.keys.map((k, i) => [k, decodeURIComponent(m[i + 1])]));
       const body = ['POST', 'PUT', 'PATCH'].includes(req.method) ? await readBody(req) : {};
-      const out = await r.handler({ user, params, body, query: url.searchParams });
+      const out = await r.handler({ user, params, body, query: url.searchParams, req });
       if (out && out.status && out.body) return send(res, out.status, out.body);
       return send(res, 200, out);
     } catch (err) {
@@ -259,7 +278,9 @@ const server = http.createServer(async (req, res) => {
   fs.createReadStream(file).pipe(res);
 });
 
-store.load();
+const db0 = store.load();
+// TEACHER_PIN in the hosting settings always wins (so the teacher code can be changed there)
+if (process.env.TEACHER_PIN && db0.teacher.pin !== process.env.TEACHER_PIN) { db0.teacher.pin = String(process.env.TEACHER_PIN); store.save(); }
 server.listen(PORT, () => console.log(`Present Lab running → http://localhost:${PORT}`));
 process.on('SIGINT', () => { store.flush(); process.exit(0); });
 process.on('SIGTERM', () => { store.flush(); process.exit(0); });

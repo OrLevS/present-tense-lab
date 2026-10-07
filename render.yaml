@@ -1,0 +1,24 @@
+# Render blueprint: one web service in Frankfurt (EU) with a small permanent disk for class data.
+# TEACHER_PIN and STUDENTS are secrets you type in Render's dashboard — they never go to GitHub.
+services:
+  - type: web
+    name: present-lab
+    runtime: node
+    region: frankfurt
+    plan: starter
+    buildCommand: npm install --omit=optional
+    startCommand: node server/server.js
+    healthCheckPath: /api/students/names
+    disk:
+      name: class-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+      - key: NODE_VERSION
+        value: "22"
+      - key: TEACHER_PIN
+        sync: false
+      - key: STUDENTS
+        sync: false

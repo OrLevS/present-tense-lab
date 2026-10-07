@@ -70,9 +70,9 @@ export function loginScreen(root, { onLoggedIn }) {
           setToken(res.token);
           try { sessionStorage.setItem('pl_role', res.user.role); } catch { /* ignore */ }
           onLoggedIn(res.user);
-        } catch {
+        } catch (err) {
           pin = ''; draw();
-          msg.textContent = t('wrong_code'); msg.classList.remove('hidden');
+          msg.textContent = t(err.status === 429 ? 'too_many' : 'wrong_code'); msg.classList.remove('hidden');
         }
       }
     };

@@ -13,6 +13,8 @@ import { DEFAULT_THRESHOLDS } from '../public/js/logic/mastery.js';
 // Copy class.example.json → data/class.json and edit it. (data/ is in .gitignore.)
 const here = path.dirname(fileURLToPath(import.meta.url));
 function readClass() {
+  // On a hosted server: STUDENTS (names separated by commas) and TEACHER_PIN come from secret environment settings
+  if (process.env.STUDENTS) return { teacherPin: process.env.TEACHER_PIN || '1234', students: process.env.STUDENTS.split(/[,\n]/).map((x) => x.trim()).filter(Boolean) };
   const file = path.join(process.env.DATA_DIR || path.join(here, '..', 'data'), 'class.json');
   const fallback = path.join(here, '..', 'class.example.json');
   try { return JSON.parse(fs.readFileSync(fs.existsSync(file) ? file : fallback, 'utf8')); } catch { return { teacherPin: '1234', students: [] }; }

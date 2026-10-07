@@ -257,6 +257,10 @@ Object.assign(S, {
   do_explain: { he: 'צפו איך המילים זזות. אפשר לעצור, לחזור אחורה ולראות שוב.', ru: 'Смотри, как двигаются слова. Можно остановить, вернуться назад и посмотреть снова.', ar: 'شوف كيف الكلمات بتتحرّك. فيك توقّف، ترجع لورا، وتشوف كمان مرّة.', en: 'Watch how the words move. You can pause, go back and watch again.' },
 });
 
+Object.assign(S, {
+  too_many: { he: 'יותר מדי ניסיונות. נסו שוב בעוד כמה דקות, או בקשו עזרה מהמורה.', ru: 'Слишком много попыток. Попробуй через несколько минут или попроси учителя.', ar: 'محاولات كتير. جرّب كمان كم دقيقة، أو اطلب مساعدة من المعلّم/ة.', en: 'Too many tries. Try again in a few minutes, or ask your teacher.' },
+});
+
 let current = 'he';
 export function setLang(l) { current = LANGS[l] ? l : 'he'; }
 export function getLang() { return current; }
